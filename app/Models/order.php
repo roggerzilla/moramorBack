@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    protected $fillable = ['user_id', 'customer_name', 'total'];
+    protected $fillable = [
+        'user_id',
+        'customer_name',
+        'total',
+        'estatus', // Agregar estatus
+    ];
 
     // Relación con el usuario
     public function user()
