@@ -1,7 +1,7 @@
 <?php
 
 return [
-
+'frontend_url' => env('FRONTEND_URL', 'http://localhost:4200'),
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -122,6 +122,7 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    
 
     
 ];

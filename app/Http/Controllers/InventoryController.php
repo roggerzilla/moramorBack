@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Item;
 use App\Models\StockAlert;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Mail\StockAvailableMail; // Importación correcta
 
 
@@ -81,6 +82,7 @@ class InventoryController extends Controller
     
             foreach ($alerts as $alert) {
                 // Enviar el correo (esto ya se irá en cola si tienes ShouldQueue en el Mailable)
+                Log::info('Enviando correo a: ' . $alert->user->email);
                 Mail::to($alert->user->email)->send(new StockAvailableMail($item));
             }
     

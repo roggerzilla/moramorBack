@@ -7,23 +7,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 class AuthController extends Controller
 {
-    public function verifyEmail(Request $request, $id, $hash)
+    public function verifyEmail(EmailVerificationRequest $request)
     {
-        $user = User::findOrFail($id);
-
-        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            return response()->json(['message' => 'Enlace de verificación inválido.'], 400);
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['verified' => true]);;
         }
-
-        if (!$user->hasVerifiedEmail()) {
-            $user->markEmailAsVerified();
-            event(new Verified($user));
+    
+        if ($request->user()->markEmailAsVerified()) {
+            event(new Verified($request->user()));
         }
-
-        return redirect('http://localhost:4200/email-verified');
+    
+      //  return redirect('http://localhost:4200/email-verified?success=1');
+      return response()->json(['verified' => true]);
     }
 
     public function register(Request $request)

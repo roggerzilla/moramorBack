@@ -20,8 +20,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // Rutas de verificación de correo electrónico
-Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
-    ->name('verification.verify');
 
 Route::post('/email/resend', [AuthController::class, 'resendVerificationEmail'])
     ->middleware(['auth:sanctum', 'throttle:6,1'])
