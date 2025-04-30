@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\Address;
 
 class UserController extends Controller
 {
@@ -161,5 +161,36 @@ public function getUserInfo(Request $request)
         'email' => $user->email,
         'role' => $user->role,
     ]);
+}
+
+public function addAddress(Request $request)
+{
+    $user = Auth::user();
+
+    $request->validate([
+        'street' => 'required|string|max:255',
+        'city' => 'required|string|max:255',
+        'state' => 'required|string|max:255',
+        'postal_code' => 'required|string|max:20',
+        'country' => 'required|string|max:255',
+    ]);
+
+    $address = new Address([
+        'street' => $request->street,
+        'city' => $request->city,
+        'state' => $request->state,
+        'postal_code' => $request->postal_code,
+        'country' => $request->country,
+    ]);
+
+    $user->addresses()->save($address);
+
+    return response()->json(['message' => 'Dirección agregada exitosamente']);
+}
+
+public function getAddresses()
+{
+    $user = Auth::user();
+    return response()->json($user->addresses);
 }
 }

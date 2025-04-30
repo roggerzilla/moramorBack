@@ -85,8 +85,18 @@ Route::middleware(['auth:sanctum', RoleMiddleware::class . ':superuser,admin'])-
 });
 
 Route::post('/ordersStore', [OrderController::class, 'store']);
-
+Route::post('/items/{id}/subtract-stock', [InventoryController::class, 'subtractStock']);
+Route::post('/subtract-stock', [InventoryController::class, 'batchSubtractStock']);
 Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/user/address', [UserController::class, 'addAddress']);
+    Route::get('/user/addresses', [UserController::class, 'getAddresses']);
+});
+
+
 //notificaciones stock
     Route::middleware('auth:sanctum')->post('/stock-alerts', [NotifyController::class, 'store']);
 

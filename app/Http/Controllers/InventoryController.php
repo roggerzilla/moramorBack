@@ -126,4 +126,22 @@ public function subtractStock($itemId, $quantity)
 
     return response()->json(['message' => 'Stock actualizado correctamente']);
 }
+
+public function batchSubtractStock(Request $request)
+{
+    $items = $request->input('items');
+
+    foreach ($items as $itemData) {
+        $item = Item::find($itemData['item_id']);
+
+        if (!$item) continue;
+
+        if ($item->quantity >= $itemData['quantity']) {
+            $item->quantity -= $itemData['quantity'];
+            $item->save();
+        }
+    }
+
+    return response()->json(['message' => 'Stock actualizado']);
+}
 }
