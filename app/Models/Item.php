@@ -3,19 +3,29 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Item extends Model
 {
-    protected $fillable = ['name', 'description', 'price', 'quantity', 'image_url'];
+    use HasFactory;
 
-    // Relación con el modelo CartItem
+    protected $fillable = ['name', 'description', 'price', 'quantity', 'mililitros']; // Agregar 'mililitros' aquí
+
+    // Relación con imágenes
+    public function images()
+    {
+        return $this->hasMany(ItemImage::class);
+    }
+
+    // Relación con carrito
     public function cartItems()
     {
         return $this->hasMany(CartItem::class, 'item_id');
     }
+
+    // Relación con órdenes
     public function orders()
     {
-        return $this->belongsToMany(Order::class, 'order_item')
-            ->withPivot('quantity');
+        return $this->belongsToMany(Order::class, 'order_item')->withPivot('quantity');
     }
 }

@@ -193,4 +193,43 @@ public function getAddresses()
     $user = Auth::user();
     return response()->json($user->addresses);
 }
+
+public function updateProfile(Request $request)
+{
+    $user = Auth::user();
+
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+        'password' => 'nullable|string|min:8',
+    ]);
+
+    $user->name = $request->name;
+    $user->email = $request->email;
+    if ($request->password) {
+        $user->password = Hash::make($request->password);
+    }
+
+    $user->save();
+
+    return response()->json(['message' => 'Perfil actualizado correctamente']);
+}
+
+public function updateAddress(Request $request, $id)
+{
+    $address = Address::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+
+    $address->update($request->only([
+        'street', 'city', 'state', 'postal_code', 'country'
+    ]));
+
+    return response()->json(['message' => 'Dirección actualizada correctamente']);
+}
+public function deleteAddress($id)
+{
+    $address = Address::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+    $address->delete();
+
+    return response()->json(['message' => 'Dirección eliminada correctamente']);
+}
 }

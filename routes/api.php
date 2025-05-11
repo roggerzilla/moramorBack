@@ -11,6 +11,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Controllers\NotifyController;
 use App\Http\Controllers\StripeController;
+use Stripe\Stripe;
+use Stripe\Webhook;
 
 // ============================================
 // ✅ RUTAS PÚBLICAS (CUALQUIER USUARIO)
@@ -96,8 +98,42 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/addresses', [UserController::class, 'getAddresses']);
 });
 
+Route::middleware('auth:sanctum')->put('/user/profile', [UserController::class, 'updateProfile']);
+Route::middleware('auth:sanctum')->put('/user/address/{id}', [UserController::class, 'updateAddress']);
+Route::delete('/user/address/{id}', [UserController::class, 'deleteAddress']);
+
+// routes/web.php
+Route::post('/stripe/webhook', function (Request $request) {
+    $payload = $request->getContent();
+    $sig_header = $request->header('Stripe-Signature');
+    $event = null;
+
+    try {
+        $event = \Stripe\Webhook::constructEvent(
+            $payload, $sig_header, env('STRIPE_WEBHOOK_SECRET')
+        );
+    } catch (\Exception $e) {
+        return response('Invalid signature', 400);
+    }
+
+    // Manejar el evento de pago exitoso
+    if ($event->type === 'payment_intent.succeeded') {
+        $paymentIntent = $event->data->object;
+        
+        // Guardar la orden en tu base de datos
+        Order::create([
+            'payment_intent_id' => $paymentIntent->id,
+            'amount' => $paymentIntent->amount / 100,
+            'status' => 'completed',
+        ]);
+    }
+
+    return response('OK', 200);
+});
+
 
 //notificaciones stock
     Route::middleware('auth:sanctum')->post('/stock-alerts', [NotifyController::class, 'store']);
 
+    
 

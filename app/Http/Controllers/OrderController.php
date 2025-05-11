@@ -1,5 +1,7 @@
 <?php
 
+// OrderController.php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -7,6 +9,7 @@ use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Models\Item;
+use Illuminate\Support\Facades\Notification;
 use App\Notifications\StockInsuficienteNotification;
 
 class OrderController extends Controller
@@ -65,36 +68,35 @@ class OrderController extends Controller
             'items.*.id' => 'required|exists:items,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
-    
+
         // Iniciar una transacción de base de datos
         DB::beginTransaction();
-    
+
         try {
             // Verificar el stock antes de crear la orden
             foreach ($request->items as $item) {
                 $itemModel = Item::find($item['id']);
-    
                 if ($itemModel->quantity < $item['quantity']) {
                     // Notificar al usuario que no hay suficiente stock
                     $user = User::find($request->user_id);
                     Notification::send($user, new StockInsuficienteNotification($itemModel->name));
-    
+
                     // Revertir la transacción
                     DB::rollBack();
-    
+
                     return response()->json([
                         'message' => 'No hay suficiente stock para el ítem: ' . $itemModel->name,
                     ], 400);
                 }
             }
-    
+
             // Calcular el total del pedido
             $total = 0;
             foreach ($request->items as $item) {
                 $itemModel = Item::find($item['id']);
                 $total += $itemModel->price * $item['quantity'];
             }
-    
+
             // Crear la orden con el estatus "pedido"
             $order = Order::create([
                 'user_id' => $request->user_id,
@@ -102,30 +104,32 @@ class OrderController extends Controller
                 'total' => $total,
                 'estatus' => 'pedido', // Establecer el estatus como "pedido"
             ]);
-    
+
             // Asociar los ítems a la orden en la tabla pivote
             foreach ($request->items as $item) {
                 $order->items()->attach($item['id'], ['quantity' => $item['quantity']]);
-    
-                // Restar el stock del inventario
+            }
+
+            // Restar el stock de los productos después de que se confirma la orden
+            foreach ($request->items as $item) {
                 $itemModel = Item::find($item['id']);
                 $itemModel->quantity -= $item['quantity'];
                 $itemModel->save();
             }
-    
+
             // Confirmar la transacción
             DB::commit();
-    
+
             // Devolver una respuesta exitosa
             return response()->json([
                 'message' => 'Orden creada correctamente',
                 'order' => $order->load('items'), // Cargar los ítems asociados
             ], 201);
-    
+
         } catch (\Exception $e) {
             // Revertir la transacción en caso de error
             DB::rollBack();
-    
+
             // Devolver un mensaje de error
             return response()->json([
                 'message' => 'Error al crear la orden',
