@@ -9,7 +9,6 @@ use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Models\Item;
-use Illuminate\Support\Facades\Notification;
 use App\Notifications\StockInsuficienteNotification;
 
 class OrderController extends Controller
@@ -60,6 +59,7 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        
         // Validar los datos de entrada
         $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -67,6 +67,7 @@ class OrderController extends Controller
             'items' => 'required|array',
             'items.*.id' => 'required|exists:items,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'address_id' => 'required|exists:addresses,id', 
         ]);
 
         // Iniciar una transacción de base de datos
@@ -103,6 +104,7 @@ class OrderController extends Controller
                 'customer_name' => $request->customer_name,
                 'total' => $total,
                 'estatus' => 'pedido', // Establecer el estatus como "pedido"
+                'address_id' => $request->address_id,
             ]);
 
             // Asociar los ítems a la orden en la tabla pivote

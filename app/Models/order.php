@@ -11,6 +11,10 @@ class Order extends Model
         'customer_name',
         'total',
         'estatus', // Agregar estatus
+        'address_id',
+    ];
+    protected $casts = [
+        'shipping_address' => 'array',
     ];
 
     // Relación con el usuario
@@ -24,5 +28,9 @@ class Order extends Model
     {
         return $this->belongsToMany(Item::class, 'order_item')
             ->withPivot('quantity');
+    }
+
+    public function address() {
+        return $this->belongsTo(Address::class);
     }
 }
