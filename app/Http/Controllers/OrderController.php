@@ -22,7 +22,7 @@ class OrderController extends Controller
         $searchDate = $request->query('date');
     
         // Consulta base
-        $orders = Order::with(['user', 'items'])
+        $orders = Order::with(['user', 'items', 'address']) // Asegúrate de cargar la relación de dirección
             ->when($searchId, function ($query, $searchId) {
                 return $query->where('id', $searchId);
             })
@@ -51,11 +51,19 @@ class OrderController extends Controller
                         'price' => $item->price,
                     ];
                 }),
+                'address' => $order->address ? [
+                    'street' => $order->address->street,
+                    'city' => $order->address->city,
+                    'state' => $order->address->state,
+                    'postalCode' => $order->address->postal_code,
+                    'country' => $order->address->country,
+                ] : null, // Si no hay dirección, devolver null
             ];
         });
     
         return response()->json($formattedOrders);
     }
+    
 
     public function store(Request $request)
     {
