@@ -41,8 +41,14 @@ Route::middleware('auth:sanctum')->group(function () {
 // ============================================
 // ✅ RUTAS PARA INVENTARIO (SUPER USUARIO Y ADMIN)
 // ============================================
+Route::middleware(['auth:sanctum', RoleMiddleware::class . ':superuser,admin'])->group(function () {
+    Route::get('/items/getdeleted', [InventoryController::class, 'getDeletedItems']);
+    Route::put('/items/{id}/restore', [InventoryController::class, 'restoreItem']);
+});
+
 Route::get('/items', [InventoryController::class, 'getItems']);
 Route::get('/items/{id}', [InventoryController::class, 'getItem']);
+
 
 // ============================================
 // ✅ RUTAS PARA MODIFICAR INVENTARIO (SOLO SUPER USUARIO)

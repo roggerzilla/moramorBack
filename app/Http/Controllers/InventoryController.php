@@ -136,4 +136,28 @@ class InventoryController extends Controller
 
         return response()->json(['message' => 'Stock actualizado']);
     }
+
+public function getDeletedItems()
+{
+    // Asegúrate que el modelo Item tenga el trait SoftDeletes
+    $deletedItems = Item::onlyTrashed()->get();
+
+    if ($deletedItems->isEmpty()) {
+        return response()->json(['message' => 'No hay productos eliminados'], 404);
+    }
+
+    return response()->json($deletedItems);
+}
+public function restoreItem($id)
+{
+    $item = Item::withTrashed()->find($id);
+
+    if (!$item || !$item->trashed()) {
+        return response()->json(['message' => 'Producto no encontrado o no está eliminado'], 404);
+    }
+
+    $item->restore();
+    return response()->json(['message' => 'Producto restaurado exitosamente']);
+}
+
 }
