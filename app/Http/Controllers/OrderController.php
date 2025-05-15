@@ -53,6 +53,7 @@ class OrderController extends Controller
                 }),
                 'address' => $order->address ? [
                     'street' => $order->address->street,
+                    'address2' => $order->address->address2, 
                     'city' => $order->address->city,
                     'state' => $order->address->state,
                     'postalCode' => $order->address->postal_code,

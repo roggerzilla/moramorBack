@@ -169,6 +169,7 @@ public function addAddress(Request $request)
 
     $request->validate([
         'street' => 'required|string|max:255',
+        'address2' => 'nullable|string|max:255',
         'city' => 'required|string|max:255',
         'state' => 'required|string|max:255',
         'postal_code' => 'required|string|max:20',
@@ -177,6 +178,7 @@ public function addAddress(Request $request)
 
     $address = new Address([
         'street' => $request->street,
+        'address2' => $request->address2,
         'city' => $request->city,
         'state' => $request->state,
         'postal_code' => $request->postal_code,
@@ -220,7 +222,7 @@ public function updateAddress(Request $request, $id)
     $address = Address::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
 
     $address->update($request->only([
-        'street', 'city', 'state', 'postal_code', 'country'
+        'street', 'address2', 'city', 'state', 'postal_code', 'country' // <- address2 agregado
     ]));
 
     return response()->json(['message' => 'Dirección actualizada correctamente']);
