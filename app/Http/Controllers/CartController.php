@@ -11,17 +11,24 @@ use App\Models\Item; // Cambiado de Product a Item
 class CartController extends Controller
 {
     // Obtener los ítems del carrito del usuario autenticado
-    public function getCartItems()
-    {
-        $user = Auth::user();
+public function getCartItems()
+{
+    $user = Auth::user();
 
-        // Obtener los ítems del carrito con la información del ítem
-        $cartItems = CartItem::where('user_id', $user->id)
-            ->with('item') // Cargar la relación con el ítem
-            ->get();
+    $cartItems = CartItem::where('user_id', $user->id)
+        ->whereHas('item', function($query) {
+            $query->whereNull('deleted_at'); // Solo ítems no eliminados
+        })
+        ->with(['item' => function($query) {
+            $query->whereNull('deleted_at'); // Cargar solo ítems no eliminados
+        }])
+        ->get()
+        ->filter(function($cartItem) {
+            return $cartItem->item !== null; // Filtro adicional por seguridad
+        });
 
-        return response()->json($cartItems);
-    }
+    return response()->json($cartItems);
+}
 
     // Agregar un ítem al carrito
     public function addToCart(Request $request)

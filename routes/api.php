@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum', RoleMiddleware::class . ':superuser'])->group
     Route::delete('/items/{id}', [InventoryController::class, 'deleteItem']);
     Route::post('/upload-image', [InventoryController::class, 'uploadImage']);
 });
+Route::put('/items/images/{id}', [InventoryController::class, 'updateImage']);
 
 // ============================================
 // ✅ RUTAS PARA ADMINISTRACIÓN DE USUARIOS

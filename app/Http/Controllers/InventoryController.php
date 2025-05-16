@@ -13,10 +13,12 @@ use App\Mail\StockAvailableMail;
 class InventoryController extends Controller
 {
     // Mostrar todos los productos con sus imágenes
-    public function getItems()
-    {
-        return response()->json(Item::with('images')->get());
-    }
+public function getItems()
+{
+    return response()->json(
+        Item::with('images')->get() // Esto ya excluye eliminados si SoftDeletes está bien implementado
+    );
+}
 
     public function getItem($id)
     {
@@ -63,29 +65,41 @@ class InventoryController extends Controller
     }
 
     // Actualizar producto
-    public function updateItem(Request $request, $id)
-    {
-        $item = Item::find($id);
-        if (!$item) {
-            return response()->json(['message' => 'Producto no encontrado'], 404);
-        }
-
-        $previousQuantity = $item->quantity;
-        $item->update($request->only(['name', 'description', 'price', 'quantity','mililitros']));
-
-        if ($previousQuantity === 0 && $item->quantity > 0) {
-            $alerts = StockAlert::where('item_id', $item->id)->with('user')->get();
-
-            foreach ($alerts as $alert) {
-                Log::info('Enviando correo a: ' . $alert->user->email);
-                Mail::to($alert->user->email)->send(new StockAvailableMail($item));
-            }
-
-            StockAlert::where('item_id', $item->id)->delete();
-        }
-
-        return response()->json(['message' => 'Producto actualizado']);
+public function updateItem(Request $request, $id)
+{
+    $item = Item::find($id);
+    if (!$item) {
+        return response()->json(['message' => 'Producto no encontrado'], 404);
     }
+
+    $previousQuantity = $item->quantity;
+    $item->update($request->only(['name', 'description', 'price', 'quantity','mililitros']));
+
+    if ($request->has('image_urls')) {
+        // Elimina imágenes antiguas
+        $item->images()->delete();
+
+        // Guarda las nuevas imágenes
+        foreach ($request->image_urls as $url) {
+            $item->images()->create(['url' => $url]);
+        }
+    }
+
+    // Código para notificar stock (sin cambios)
+    if ($previousQuantity === 0 && $item->quantity > 0) {
+        $alerts = StockAlert::where('item_id', $item->id)->with('user')->get();
+
+        foreach ($alerts as $alert) {
+            \Log::info('Enviando correo a: ' . $alert->user->email);
+            \Mail::to($alert->user->email)->send(new StockAvailableMail($item));
+        }
+
+        StockAlert::where('item_id', $item->id)->delete();
+    }
+
+    return response()->json(['message' => 'Producto actualizado']);
+}
+
 
     // Eliminar producto
     public function deleteItem($id)
@@ -159,5 +173,26 @@ public function restoreItem($id)
     $item->restore();
     return response()->json(['message' => 'Producto restaurado exitosamente']);
 }
+public function updateImage(Request $request, $id)
+{
+    $request->validate([
+        'url' => 'required|url'  // Validamos que la URL sea una URL válida
+    ]);
 
+    // Buscamos la imagen por su ID
+    $image = ItemImage::find($id);
+
+    if (!$image) {
+        return response()->json(['message' => 'Imagen no encontrada'], 404);
+    }
+
+    // Actualizamos la URL de la imagen
+    $image->url = $request->url;
+    $image->save();
+
+    return response()->json([
+        'message' => 'Imagen actualizada correctamente',
+        'image' => $image  // Opcional: devolver los datos actualizados
+    ]);
+}
 }
