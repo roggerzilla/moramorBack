@@ -11,6 +11,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Controllers\NotifyController;
 use App\Http\Controllers\StripeController;
+use App\Http\Controllers\GoogleAuthController;
+
 use Stripe\Stripe;
 use Stripe\Webhook;
 
@@ -138,6 +140,8 @@ Route::post('/stripe/webhook', function (Request $request) {
     return response('OK', 200);
 });
 
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect']);
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 
 //notificaciones stock
     Route::middleware('auth:sanctum')->post('/stock-alerts', [NotifyController::class, 'store']);
